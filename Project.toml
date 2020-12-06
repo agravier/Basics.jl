@@ -1,0 +1,7 @@
+name = "Basics"
+uuid = "a8203661-0a9d-485d-a274-f7c110a23d7c"
+authors = ["Alexandre Gravier"]
+version = "0.1.0"
+
+[compat]
+julia = "1.5"
