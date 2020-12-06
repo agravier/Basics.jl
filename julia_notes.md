@@ -29,6 +29,27 @@ mv("Basics", "Basics.jl")
 _Github > <repository page> > Settings > Secrets > New repository secret_
 [[Ref](https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository)]
 
+### Managing dependencies
+
+From the Julia REPL, type `]` to enter the Pkg REPL. Then `activate .` to activate the venv.
+
+|Command|Explanation|
+|:--|:--|
+|add Example|add latest stable|
+|add Example#master|track master branch|
+|add Example@0.4|add specific version|
+|add https://github.com/... | add repo |
+|add Example|add dependency in development mode|
+|pin Example|prevent update of dependency|
+|free Example|Remove version/git/dev/... constraint and use latest stable|
+|rm example|Remove dependency|
+|gc|Remove unused implicit deps|
+|up|update all deps|
+|up Example|update dependency|
+|up --minor Example|update only up to minor|
+
+[[Pkg ref doc](https://julialang.github.io/Pkg.jl/v1/managing-packages/)]
+
 ### Tests
 
 Managing the test env and running tests
