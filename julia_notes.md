@@ -62,3 +62,7 @@ add Test
 # Run the Tests defined in test/runtests.jl
 test
 ```
+
+### Performance
+
+[[Ref](https://docs.julialang.org/en/v1/manual/performance-tips/)]

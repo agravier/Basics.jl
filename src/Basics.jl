@@ -1,5 +1,5 @@
 module Basics
 
-# Write your package code here.
+using ..LinkedLists
 
 end
