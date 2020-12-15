@@ -1,29 +1,32 @@
 module AbstractDataStructure
 
-abstract type Ref end
-abstract type Value end
 abstract type DataStructure{Ref, Value} end
 
 """
-insert!(ds::DataStructure, val::Value) -> Ref
+ins!(ds::DataStructure, val::Value) -> Ref
 """
-function insert! end
+function ins! end
 
 """
-delete!(ds::DataStructure, pos::Ref) -> Value
+del!(ds::DataStructure, pos::Ref) -> Value
 raises KeyError
 """
-function delete! end
+function del! end
 
 """
-get(ds::DataStructure, pos::Ref) -> Value
+at(ds::DataStructure, pos::Ref) -> Value
 raises KeyError
 """
-function get end
+function at end
 
 """
-search(ds::DataStructure, val::Value) -> Union{Ref, Nothing}
+search(ds::DataStructure, val::Value) -> Vector{Ref}
 """
 function search end
+
+"""
+len(ds::DataStructure) -> Integer
+"""
+function len end
 
 end  # module AbstractDataStructure

@@ -1,17 +1,15 @@
 module LinkedLists
 
-include("./AbstractDataStructure.jl")
-
 using Base
-import .AbstractDataStructure: DataStructure
+import ..AbstractDataStructure: DataStructure
 
-# export LinkedList, insert!, delete!, get, search
+export LinkedList, ins!, del!, at, search, len
 
 struct _EOL end
 
 EOL = _EOL()
 
-mutable struct LinkedList{V} <: DataStructure{Integer, V}
+mutable struct LinkedList{V} <: DataStructure{Int, V}
     data::Union{V, _EOL}
     tail::Union{LinkedList{V}, Nothing}
     function LinkedList{V}(data::Union{V, _EOL}, tail::Union{LinkedList{V}, Nothing}) where {V}
@@ -33,15 +31,15 @@ function LinkedList{V}(vec::Vector{V}) where {V}
 end
 
 
-function hopn(l::LinkedList, n::Integer) :: LinkedList
+function hopn(l::LinkedList, n::Int)::LinkedList
     @assert(n ≥ 0)
     i = 0
     while i < n
         if l.data === EOL; throw(KeyError(n)) end
-        next = l.tail
+        l = l.tail
         i += 1
     end
-    if  l === nothing; throw(KeyError(n)) end
+    if l === nothing; throw(KeyError(n)) end
     l
 end
 
@@ -50,43 +48,54 @@ Base.iterate(::LinkedList, state::LinkedList) = state.data === EOL ? nothing : (
 Base.iterate(::LinkedList, ::Nothing) = nothing
 
 """
-insert!(ds::DataStructure, val::Value) -> Ref
+ins!(ds::DataStructure, val::Value) -> Ref
 """
-function insert!(l::LinkedList{V}, val::V) :: Integer where {V}
+function ins!(l::LinkedList{V}, val::V)::Int where {V}
     l.tail = LinkedList{V}(l.data, l.tail)
     l.data = val
     1
 end
 
 """
-delete!(ds::DataStructure, pos::Ref) -> Value
+del!(ds::DataStructure, pos::Ref) -> Value
 raises KeyError
 """
-function delete!(l::LinkedList{V}, pos::Integer) :: V where {V}
+function del!(l::LinkedList{V}, pos::Int)::V where {V}
     @assert(pos > 0)
     to_delete = hopn(l, pos-1)
     if to_delete.data === EOL; throw(KeyError(pos)) end
     removed_data = to_delete.data
-    println(to_delete)
-    println(to_delete.tail)
     to_delete.data = to_delete.tail.data
     to_delete.tail = to_delete.tail.tail
     removed_data
 end
 
 """
-getat(ds::DataStructure, pos::Ref) -> Value
+at(ds::DataStructure, pos::Ref) -> Value
 raises KeyError
 """
-function getat(l::LinkedList{V}, pos::Integer) :: V where {V}
+function at(l::LinkedList{V}, pos::Int)::V where {V}
     @assert(pos > 0)
-    hopn(l, pos-1).data
+    node = hopn(l, pos-1)
+    if node.data === EOL; throw(KeyError(pos)) end
+    node.data
 end
 
 """
-search(ds::DataStructure, val::Value) -> Union{Ref, Nothing}
+search(ds::DataStructure, val::Value) -> Vector{Ref}
 """
-function search end
+function search(ds::LinkedList{V}, val::V)::Vector{Int} where {V}
+    return [i for (i, e) in enumerate(ds) if e == val]
+end
+
+"""
+len(ds::DataStructure) -> Int
+"""
+function len(ds::LinkedList)::Int
+    i = 0
+    while ds.data != EOL; ds = ds.tail; i += 1 end
+    i
+end
 
 _iobuf = IOBuffer()
 printstyled(IOContext(_iobuf, :color => true), "[ ", color=:green)
@@ -98,7 +107,7 @@ _LIST_SEP_COLOR = String(take!(_iobuf))
 _iobuf = nothing
 
 
-function Base.show(io::IO, x)
+function Base.show(io::IO, x::LinkedList)
     if get(io, :color, false)
         open = _LIST_OPEN_COLOR
         close = _LIST_CLOSE_COLOR

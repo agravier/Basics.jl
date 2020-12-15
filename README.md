@@ -15,6 +15,12 @@ Julia implementations of basic algorithms and data structures
 |Skip list|[SkipLists.jl](src/SkipLists.jl)|
 
 
+## Running tests
+
+```shell
+julia --project -e 'using Pkg; Pkg.test()'
+```
+
 ## TODO
 
 - [x] Linked list

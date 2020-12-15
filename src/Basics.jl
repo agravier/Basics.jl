@@ -1,5 +1,6 @@
 module Basics
 
-using ..LinkedLists
+include("AbstractDataStructure.jl")
+include("LinkedLists.jl")
 
 end
