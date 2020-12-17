@@ -1,7 +1,19 @@
 using Basics.AbstractDataStructure: DataStructure
 using Basics.LinkedLists
+using Basics.SkipLists
 using Test
 
+function test_order_via_interface(ds::DataStructure{Int, Int})
+    @test issorted([i for i in ds])
+    inserted_zero = ins!(ds, 0)
+    inserted_three = ins!(ds, 3)
+    inserted_minus_two = ins!(ds, -2)
+    inserted_zero = ins!(ds, 1)
+    inserted_zero = ins!(ds, 0)
+    @test issorted([i for i in ds])
+    del!(ds, search(ds, 1)[1])
+    @test issorted([i for i in ds])
+end
 
 function test_correctness_via_interface(ds::DataStructure{Int, Int})
     # Results when empty
@@ -47,8 +59,17 @@ function test_correctness_via_interface(ds::DataStructure{Int, Int})
     @test length(search(ds, -2)) == 2
     @test length(search(ds, 0)) == 1
     @test len(ds) == 3
+    # Empty and run order tests
+    if ordered_data_structure_p(ds)
+        del!(ds, search(ds, -2)[1])
+        del!(ds, search(ds, -2)[1])
+        del!(ds, search(ds, 0)[1])
+        @test len(ds) == 0
+        test_order_via_interface(ds)
+    end
 end
 
 @testset "Basics.jl" begin
     test_correctness_via_interface(LinkedList{Int}())
+    test_correctness_via_interface(SkipList{Int}())
 end

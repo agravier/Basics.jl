@@ -3,7 +3,8 @@ module LinkedLists
 using Base
 import ..AbstractDataStructure: DataStructure
 
-export LinkedList, ins!, del!, at, search, len
+export LinkedList, ins!, del!, at, search, len, ordered_data_structure_p
+
 
 struct _EOL end
 
@@ -30,6 +31,7 @@ function LinkedList{V}(vec::Vector{V}) where {V}
     l
 end
 
+ordered_data_structure_p(::LinkedList) = false
 
 function hopn(l::LinkedList, n::Int)::LinkedList
     @assert(n ≥ 0)
