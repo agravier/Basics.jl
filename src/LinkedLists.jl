@@ -1,7 +1,7 @@
 module LinkedLists
 
 using Base
-import ..AbstractDataStructure: DataStructure
+import ..AbstractDataStructure
 
 export LinkedList, ins!, del!, at, search, len, ordered_data_structure_p
 
@@ -10,7 +10,7 @@ struct _EOL end
 
 EOL = _EOL()
 
-mutable struct LinkedList{V} <: DataStructure{Int, V}
+mutable struct LinkedList{V} <: AbstractDataStructure.DataStructure{Int, V}
     data::Union{V, _EOL}
     tail::Union{LinkedList{V}, Nothing}
     function LinkedList{V}(data::Union{V, _EOL}, tail::Union{LinkedList{V}, Nothing}) where {V}
@@ -31,7 +31,7 @@ function LinkedList{V}(vec::Vector{V}) where {V}
     l
 end
 
-ordered_data_structure_p(::LinkedList) = false
+AbstractDataStructure.ordered_data_structure_p(::LinkedList) = false
 
 function hopn(l::LinkedList, n::Int)::LinkedList
     @assert(n ≥ 0)
@@ -52,7 +52,7 @@ Base.iterate(::LinkedList, ::Nothing) = nothing
 """
 ins!(ds::DataStructure, val::Value) -> Ref
 """
-function ins!(l::LinkedList{V}, val::V)::Int where {V}
+function AbstractDataStructure.ins!(l::LinkedList{V}, val::V)::Int where {V}
     l.tail = LinkedList{V}(l.data, l.tail)
     l.data = val
     1
@@ -62,7 +62,7 @@ end
 del!(ds::DataStructure, pos::Ref) -> Value
 raises KeyError
 """
-function del!(l::LinkedList{V}, pos::Int)::V where {V}
+function AbstractDataStructure.del!(l::LinkedList{V}, pos::Int)::V where {V}
     @assert(pos > 0)
     to_delete = hopn(l, pos-1)
     if to_delete.data === EOL; throw(KeyError(pos)) end
@@ -76,7 +76,7 @@ end
 at(ds::DataStructure, pos::Ref) -> Value
 raises KeyError
 """
-function at(l::LinkedList{V}, pos::Int)::V where {V}
+function AbstractDataStructure.at(l::LinkedList{V}, pos::Int)::V where {V}
     @assert(pos > 0)
     node = hopn(l, pos-1)
     if node.data === EOL; throw(KeyError(pos)) end
@@ -86,14 +86,14 @@ end
 """
 search(ds::DataStructure, val::Value) -> Vector{Ref}
 """
-function search(ds::LinkedList{V}, val::V)::Vector{Int} where {V}
+function AbstractDataStructure.search(ds::LinkedList{V}, val::V)::Vector{Int} where {V}
     return [i for (i, e) in enumerate(ds) if e == val]
 end
 
 """
 len(ds::DataStructure) -> Int
 """
-function len(ds::LinkedList)::Int
+function AbstractDataStructure.len(ds::LinkedList)::Int
     i = 0
     while ds.data != EOL; ds = ds.tail; i += 1 end
     i
@@ -119,7 +119,7 @@ function Base.show(io::IO, x::LinkedList)
         close = " ]"
         sep = " → "
     end
-    print(io, "LinkedList" * open)
+    print(io, "LinkedList: " * open)
     join(io, x, sep)
     print(io, close)
 end
