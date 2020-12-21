@@ -171,7 +171,7 @@ function add_lanes!(l::SkipList{V}, how_many::Int) where {V}
     for i in top_lane_idx+1 : top_lane_idx+how_many
         eol = LaneNode{V}(EOL, 0, nothing, lower_lane_eol, nothing)
         lower_lane_eol.higher_lane_node = eol
-        head = LaneNode{V}(HEAD, 1, eol, lower_lane_head, nothing)
+        head = LaneNode{V}(HEAD, l.length+1, eol, lower_lane_head, nothing)
         lower_lane_head.higher_lane_node = head
         lower_lane_eol = eol
         lower_lane_head = head
@@ -211,7 +211,7 @@ end
 function nhops(a::LaneNode, b::LaneNode)::Union{Int, Nothing}
     i = 0
     while a != b
-        i += 1
+        i += a.node_width
         a = a.next
         if a === nothing
             return nothing
@@ -306,6 +306,7 @@ _LIST_CLOSE_COLOR = String(take!(_iobuf))
 printstyled(IOContext(_iobuf, :color => true), " → ", color=:light_green)
 _LIST_SEP_COLOR = String(take!(_iobuf))
 _iobuf = nothing
+MAX_LENGTH_DISPLAY_LIST = 10
 
 function Base.show(io::IO, x::SkipList)
     if get(io, :color, false)
@@ -320,8 +321,21 @@ function Base.show(io::IO, x::SkipList)
     lane_c = length(x.lanes)
     el_word = "element" * (x.length>1 ? "s" : "")
     l_word = "lane" * (lane_c>1 ? "s" : "")
+    x_disp = nothing
+    if x.length ≤ MAX_LENGTH_DISPLAY_LIST
+        x_disp = x
+    else
+        x_disp = Vector{Any}(undef, MAX_LENGTH_DISPLAY_LIST)
+        for (i, e) in enumerate(x)
+            x_disp[i] = e
+            if i > MAX_LENGTH_DISPLAY_LIST - 1
+                break
+            end
+        end
+        x_disp[MAX_LENGTH_DISPLAY_LIST] = "…"
+    end
     print(io, "SkipList with $(x.length) $el_word and $(lane_c) $l_word: " * open)
-    join(io, x, sep)
+    join(io, x_disp, sep)
     print(io, close)
 end
 
