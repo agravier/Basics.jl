@@ -93,27 +93,39 @@ mutable struct SkipListPtr{V}
     bottom_idx::Int
 end
 
-function hopn(l::SkipList, n::Int)::SkipListPtr
+function hopn(l::SkipList, n::Int)::Vector{LaneNode}
     @assert(n ≥ 0)
+    lane_c = length(l.lanes)
+    result_vec = Vector{LaneNode}(undef, length(l.lanes))
+    hopn(SkipListPtr(l, lane_c, l.lanes[lane_c], 0), result_vec, n)
+end
+
+function hopn(ptr::SkipListPtr, result_vec::Vector{LaneNode}, n::Int)::Vector{LaneNode}
     i = 0
     # Iterate at highest lane, accummulating node_width while remaining under n.
     # Then go to the next lane and repeat until index n is found. 
     # Return to the corresponding node at lowest lane.
-    error("unimplemented")
-end
-
-function to_bottom_node(n::LaneNode)::LaneNode 
-    while n.lower_lane_node !== nothing
-        n = n.lower_lane_node
+    while ptr.bottom_idx + ptr.node.node_width < n
+        ptr.bottom_idx += ptr.node.node_width
+        ptr.node = ptr.node.next
+        if ptr.node === nothing
+            throw(KeyError(n))
+        end
     end
-    n
-end
-
-function to_bottom_node!(ptr::Union{SkipListPtr, Nothing})
-    while ptr.node.lower_lane_node !== nothing
-        ptr.node = ptr.node.lower_lane_node
+    if ptr.bottom_idx == n
+        while ptr.node.lower_lane_node !== nothing
+            result_vec[ptr.lane] = ptr.node
+            ptr.node = ptr.node.lower_lane_node
+        end
+        return result_vec
     end
-    ptr.lane = 1
+    result_vec[ptr.lane] = ptr.node
+    if ptr.lane == 1
+        return result_vec
+    end
+    ptr.lane -= 1
+    ptr.node = ptr.node.lower_lane_node
+    hopn(ptr, result_vec, n)
 end
 
 """
@@ -126,7 +138,7 @@ function search_last_lt(l::SkipList{V}, val::V)::Tuple{Vector{LaneNode{V}}, Int}
         throw("Corrupted SkipList, missing a HEAD or EOL node.")
     end
     result_vec = Vector{LaneNode{V}}(undef, length(l.lanes))
-    search_last_lt(SkipListPtr(l, length(l.lanes), last(l.lanes), 1), result_vec, val)
+    search_last_lt(SkipListPtr(l, length(l.lanes), last(l.lanes), 0), result_vec, val)
 end
 
 function search_last_lt(
@@ -186,20 +198,33 @@ end
 
 
 function delete_lanes!(l::SkipList{V}, how_many::Int) where {V}
-    throw("not implemented")
+    cur_len = length(l.lanes)
+    node = l.lanes[cur_len-how_many]
+    while node !== nothing
+        node.higher_lane_node = nothing
+        node = node.next
+    end
+    l.lanes = l.lanes[1:cur_len-how_many]
 end
 
 
 function target_lane_count(lane_promotion_probability::Real, elem_count::Int)::Int
-    Int(ceil(log(1/lane_promotion_probability, elem_count))) + 1
+    try
+        Int(ceil(log(1/lane_promotion_probability, elem_count))) + 1
+    catch e
+        if isa(e, InexactError)
+            return 1  # we've got 0 element
+        end
+        throw(e)
+    end
 end
 
 """
 elem_count: new number of elements
 """
-function adjust_lane_count!(l::SkipList, elems_count::Int)
+function adjust_lane_count!(l::SkipList, elem_count::Int)
     lane_c = length(l.lanes)
-    target_lane_c = target_lane_count(l.p, elems_count)
+    target_lane_c = target_lane_count(l.p, elem_count)
     δ = target_lane_c - lane_c
     if δ > 0
         add_lanes!(l, δ)
@@ -256,11 +281,11 @@ end
 ins!(ds::DataStructure, val::Value) -> Ref
 """
 function AbstractDataStructure.ins!(l::SkipList{V}, val::V)::Int where {V}
-adjust_lane_count!(l, l.length+1)
+    adjust_lane_count!(l, l.length+1)
     insert_nodes, bottom_prev_idx = search_last_lt(l, val)
     create_new_node!(l.p, insert_nodes, val)
     l.length += 1
-    bottom_prev_idx + 1
+    bottom_prev_idx
 end
 
 """
@@ -269,8 +294,29 @@ raises KeyError
 """
 function AbstractDataStructure.del!(l::SkipList{V}, pos::Int)::V where {V}
     @assert(pos > 0)
-    to_delete = hopn(l, pos-1)
-    error("unimplemented")
+    node_vec = hopn(l, pos)
+    if node_vec[1].next === nothing || node_vec[1].next.data == EOL
+        throw(KeyError(pos))
+    end
+    adjust_lane_count!(l, l.length-1)
+    val = node_vec[1].next.data
+    height_at_pos = 1
+    node = node_vec[1].next
+    while node.higher_lane_node !== nothing
+        height_at_pos += 1
+        node = node.higher_lane_node
+    end
+    i = height_at_pos
+    while i > 0 
+        node_vec[i].node_width += node_vec[i].next.node_width - 1
+        node_vec[i].next = node_vec[i].next.next
+        i -= 1
+    end
+    for node in node_vec[height_at_pos+1:end]
+        node.node_width -= 1
+    end
+    l.length -= 1
+    val
 end
 
 """
@@ -279,16 +325,25 @@ raises KeyError
 """
 function AbstractDataStructure.at(l::SkipList{V}, pos::Int)::V where {V}
     @assert(pos > 0)
-    ptr = hopn(l, pos-1)
-    if ptr.node.data === EOL; throw(KeyError(pos)) end
-    ptr.node.data
+    node_vec = hopn(l, pos+1)
+    if node_vec[1].data === EOL; throw(KeyError(pos)) end
+    node_vec[1].data
 end
 
 """
 search(ds::DataStructure, val::Value) -> Vector{Ref}
 """
 function AbstractDataStructure.search(ds::SkipList{V}, val::V)::Vector{Int} where {V}
-    error("unimplemented")
+    last_lt_node_vec, bottom_idx = search_last_lt(ds, val)
+    bottom_idx -= 1 #  Because the HEAD width is not an external index
+    node::LaneNode{V} = last_lt_node_vec[1].next
+    result = Vector{Int}()
+    while node.data == val
+        push!(result, bottom_idx)
+        bottom_idx += 1
+        node = node.next
+    end
+    result 
 end
 
 """
