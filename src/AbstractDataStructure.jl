@@ -52,4 +52,7 @@ len(ds::DataStructure) -> Integer
 """
 function len end
 
+
+Base.length(ds::DataStructure) = len(ds)
+
 end  # module AbstractDataStructure

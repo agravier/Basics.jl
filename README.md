@@ -28,7 +28,7 @@ See [Trello board](https://trello.com/b/yR05sxc8/basicsjl-development)
 ### Julia
 
 - [x] Implement Linked list in Julia
-- [ ] Implement Skip list in Julia
+- [x] Implement Skip list in Julia
 - [ ] Implement Hash table in Julia
 - [ ] Implement Heap in Julia
 - [ ] Implement Binary search tree in Julia

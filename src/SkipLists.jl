@@ -335,7 +335,6 @@ search(ds::DataStructure, val::Value) -> Vector{Ref}
 """
 function AbstractDataStructure.search(ds::SkipList{V}, val::V)::Vector{Int} where {V}
     last_lt_node_vec, bottom_idx = search_last_lt(ds, val)
-    bottom_idx -= 1 #  Because the HEAD width is not an external index
     node::LaneNode{V} = last_lt_node_vec[1].next
     result = Vector{Int}()
     while node.data == val

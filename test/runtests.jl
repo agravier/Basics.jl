@@ -1,7 +1,7 @@
+using Test
 using Basics.AbstractDataStructure: DataStructure, ins!, del!, at, search, len, ordered_data_structure_p
 using Basics.LinkedLists #: LinkedList, ins!, del!, at, search, len, ordered_data_structure_p
 using Basics.SkipLists #: SkipList, ins!, del!, at, search, len, ordered_data_structure_p
-using Test
 
 function test_order_via_interface(ds::DataStructure{Int, Int})
     @test issorted([i for i in ds])
