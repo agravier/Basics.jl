@@ -174,7 +174,7 @@ Base.iterate(::SkipList, ::Nothing) = nothing
 function add_lanes!(l::SkipList{V}, how_many::Int) where {V}
     head_top_node = last(l.lanes)
     eol_top_node = head_top_node
-    while eol_top_node.data !== EOL; eol_top_node = head_top_node.next end
+    while eol_top_node.data !== EOL; eol_top_node = eol_top_node.next end
     top_lane_idx = length(l.lanes)
     new_lanes_vector = Vector{LaneNode{V}}(undef, top_lane_idx + how_many)
     copyto!(new_lanes_vector, CartesianIndices(l.lanes), l.lanes, CartesianIndices(l.lanes))
