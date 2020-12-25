@@ -21,7 +21,13 @@ end
 
 LinkedList{V}() where {V} = LinkedList{V}(EOL, nothing)
 
-LinkedList{V}(::Array{Any, 1}) where {V} = LinkedList{V}(EOL, nothing)
+function SkipList{V}(vec::Array{Any, 1}) where {V}
+    if length(vec) > 0
+        vec::Vector{V} = convert(Array{V}, vec)
+        return LinkedList{V}(vec)
+    end
+    LinkedList{V}(EOL, nothing)
+end
 
 function LinkedList{V}(vec::Vector{V}) where {V}
     l = LinkedList{V}()

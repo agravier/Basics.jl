@@ -64,7 +64,13 @@ mutable struct SkipList{V} <: AbstractDataStructure.DataStructure{Int, V}
     end
 end
 
-SkipList{V}(::Array{Any, 1}) where {V} = SkipList{V}()
+function SkipList{V}(vec::Array{Any, 1}) where {V}
+    if length(vec) > 0
+        vec::Vector{V} = convert(Array{V}, vec)
+        return SkipList{V}(vec)
+    end
+    SkipList{V}()
+end
 
 function SkipList{V}(vec::Vector{V}) where {V}
     l = SkipList{V}()
