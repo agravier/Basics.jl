@@ -21,7 +21,7 @@ end
 
 LinkedList{V}() where {V} = LinkedList{V}(EOL, nothing)
 
-function SkipList{V}(vec::Array{Any, 1}) where {V}
+function LinkedList{V}(vec::Array{Any, 1}) where {V}
     if length(vec) > 0
         vec::Vector{V} = convert(Array{V}, vec)
         return LinkedList{V}(vec)
