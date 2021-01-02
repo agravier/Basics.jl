@@ -37,7 +37,7 @@ mutable struct LaneNode{V}
             higher_lane_node::Union{LaneNode{V}, Nothing},
     ) where {V}
         @assert((data === EOL && next === nothing && node_width == 0) 
-                || (data !== EOL && next !== nothing && node_width > 0))
+                || (data !== EOL && node_width > 0))
         new{V}(data, node_width, next, lower_lane_node, higher_lane_node)
     end
 end
@@ -95,23 +95,22 @@ AbstractDataStructure.ordered_data_structure_p(::SkipList) = true
 mutable struct SkipListPtr{V}
     skip_list::SkipList{V}
     lane::Int
-    node::LaneNode{V}
+    node::Union{LaneNode{V}, Nothing}
     bottom_idx::Int
 end
 
 function hopn(l::SkipList, n::Int)::Vector{LaneNode}
     @assert(n ≥ 0)
-    lane_c = length(l.lanes)
     result_vec = Vector{LaneNode}(undef, length(l.lanes))
-    hopn(SkipListPtr(l, lane_c, l.lanes[lane_c], 0), result_vec, n)
+    copyto!(result_vec, CartesianIndices(l.lanes), l.lanes, CartesianIndices(l.lanes))
+    hopn(SkipListPtr(l, length(l.lanes), l.lanes[end], 0), result_vec, n)
 end
 
 function hopn(ptr::SkipListPtr, result_vec::Vector{LaneNode}, n::Int)::Vector{LaneNode}
-    i = 0
     # Iterate at highest lane, accummulating node_width while remaining under n.
     # Then go to the next lane and repeat until index n is found. 
-    # Return to the corresponding node at lowest lane.
-    while ptr.bottom_idx + ptr.node.node_width < n
+    # Return the corresponding node at lowest lane and all predecesors at higher lanes.
+    while ptr.bottom_idx + ptr.node.node_width ≤ n && ptr.node.data !== EOL
         ptr.bottom_idx += ptr.node.node_width
         ptr.node = ptr.node.next
         if ptr.node === nothing
@@ -119,8 +118,9 @@ function hopn(ptr::SkipListPtr, result_vec::Vector{LaneNode}, n::Int)::Vector{La
         end
     end
     if ptr.bottom_idx == n
-        while ptr.node.lower_lane_node !== nothing
+        while ptr.node !== nothing
             result_vec[ptr.lane] = ptr.node
+            ptr.lane -= 1
             ptr.node = ptr.node.lower_lane_node
         end
         return result_vec
@@ -300,8 +300,8 @@ raises KeyError
 """
 function AbstractDataStructure.del!(l::SkipList{V}, pos::Int)::V where {V}
     @assert(pos > 0)
-    node_vec = hopn(l, pos)
-    if node_vec[1].next === nothing || node_vec[1].next.data == EOL
+    node_vec = hopn(l, pos-1)
+    if node_vec[1].next === nothing || node_vec[1].next.data === EOL
         throw(KeyError(pos))
     end
     adjust_lane_count!(l, l.length-1)
@@ -331,7 +331,7 @@ raises KeyError
 """
 function AbstractDataStructure.at(l::SkipList{V}, pos::Int)::V where {V}
     @assert(pos > 0)
-    node_vec = hopn(l, pos+1)
+    node_vec = hopn(l, pos)
     if node_vec[1].data === EOL; throw(KeyError(pos)) end
     node_vec[1].data
 end
@@ -399,6 +399,15 @@ function Base.show(io::IO, x::SkipList)
     print(io, close)
 end
 
+function Base.show(io::IO, ::_HEAD)
+    print(io, "HEAD")
+end
+
+function Base.show(io::IO, ::_EOL)
+    print(io, "EOL")
+end
+
+
 _iobuf = IOBuffer()
 printstyled(IOContext(_iobuf, :color => true), "⟦ ", color=:red)
 _LANE_NODE_OPEN_COLOR = String(take!(_iobuf))
@@ -421,6 +430,12 @@ function Base.show(io::IO, x::LaneNode)
     print(io, open)
     join(io, x, sep)
     print(io, close)
+end
+
+function Base.show(io::IO, x::Vector{LaneNode})
+    for i in length(x):-1:1
+       println(io, "$i: $(x[i])")
+    end
 end
 
 end  # module SkipLists
