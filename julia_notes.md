@@ -52,15 +52,22 @@ From the Julia REPL, type `]` to enter the Pkg REPL. Then `activate .` to activa
 
 ### Tests
 
-Managing the test env and running tests
+You need to manage the test env separately. Even standard library packages such as `Test` or `Random` 
+will NOT be available under the test environment unless added to the test project.
 
 ```julia
-# From the Pkg REPL, activate the test env
+# From the Pkg REPL (`]` from jlia REPL), activate the test env
 activate ./test
 # Add a test-specific dependency
 add Test
 # Run the Tests defined in test/runtests.jl
 test
+```
+
+Run tests outside of the REPL with 
+
+```shell
+ julia --project -e 'using Pkg; Pkg.test()'
 ```
 
 ### Performance
